@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,21 +46,28 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
-/* USER CODE BEGIN PV */
- uint16_t ValueFrmSoil=0;
+I2C_HandleTypeDef hi2c1;
 
+UART_HandleTypeDef huart2;
+
+/* USER CODE BEGIN PV */
+  uint16_t ValueFrmSoil=0;
+  char strData[10];
+  char moisture[]= "Moisture:";
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_USART2_UART_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 // Функция для управления реле
 	void Relay_SetState(GPIO_PinState state) {
 	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, state);
 	}
-	//Функция для вызова прерывания на ADC
+
 
 /* USER CODE END PFP */
 
@@ -97,8 +105,12 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ADC1_Init();
+  MX_USART2_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADCEx_Calibration_Start(&hadc1);
+  ssd1306_Init();
+
 
   /* USER CODE END 2 */
 
@@ -109,14 +121,24 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
 	  HAL_ADC_Start_IT(&hadc1);
 	  //HAL_ADC_ADCStart(&hadc1);
 	 // HAL_ADC_PollForConversion(&hadc1, 10);
 	 // ValueFrmSoil=HAL_ADC_GetValue(&hadc1);
 	  //HAL_ADC_Stop(&hadc1);
-	 if(ValueFrmSoil >= 2000 && ValueFrmSoil <= 2730){
+	 if(ValueFrmSoil >= 1750){
 		  Relay_SetState(GPIO_PIN_RESET);
-	  }else if(ValueFrmSoil >= 500 && ValueFrmSoil <= 1148)Relay_SetState(GPIO_PIN_SET);
+
+      	  }else if(ValueFrmSoil >= 1000 && ValueFrmSoil <=1300)Relay_SetState(GPIO_PIN_SET);
+	 ssd1306_SetCursor(5, 5);//ToDo Запхати все у функцыю ы додати ще щось
+	 ssd1306_WriteString(moisture, Font_11x18, White);
+	 ssd1306_SetCursor(40, 25);
+	ssd1306_WriteString(strData, Font_11x18, White);
+	 ssd1306_UpdateScreen();
+
+	 sprintf(strData, "%d", ValueFrmSoil);
+	 HAL_UART_Transmit(&huart2, (uint8_t*)strData, sizeof((uint8_t*)strData), HAL_MAX_DELAY);
 	  HAL_Delay(1000);
 
 
@@ -213,6 +235,73 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
 
 }
 
