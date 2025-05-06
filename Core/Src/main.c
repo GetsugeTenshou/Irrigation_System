@@ -21,7 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,22 +46,49 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc2;
+
+I2C_HandleTypeDef hi2c1;
+
+TIM_HandleTypeDef htim1;
+
+UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
- uint16_t ValueFrmSoil=0;
-
+uint32_t previousTick = 0;
+  uint16_t ValueFrmSoil1=0;
+  uint16_t ValueFrmSoil2=0;
+  uint16_t Encoder=0;
+  char strData[10];
+  char strData2[10];
+  char Auto[]= "Auto";
+  char FICUS[]= "FICUS";
+  char ALOCASIA[]= "ALOCASIA";
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_USART2_UART_Init(void);
+static void MX_I2C1_Init(void);
+static void MX_ADC2_Init(void);
+static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 // Функция для управления реле
 	void Relay_SetState(GPIO_PinState state) {
 	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, state);
 	}
-	//Функция для вызова прерывания на ADC
+	void ValveALOCASIA_SetState(GPIO_PinState state) {
+		 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, state);
+		}
+	void ValveFICUS_SetState(GPIO_PinState state) {
+			 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, state);
+			}
+	void Display_Start_Interface(void);
+	void Display_Start_Interface2(void);
+
+
 
 /* USER CODE END PFP */
 
@@ -97,27 +126,72 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ADC1_Init();
+  MX_USART2_UART_Init();
+  MX_I2C1_Init();
+  MX_ADC2_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADCEx_Calibration_Start(&hadc1);
+  HAL_ADCEx_Calibration_Start(&hadc2);
+  ssd1306_Init();
+  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
+  HAL_ADC_Start_IT(&hadc1);
+  HAL_ADC_Start_IT(&hadc2);
+
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  previousTick = HAL_GetTick();
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  if (HAL_GetTick() - previousTick >= 10000) {
+	          previousTick = HAL_GetTick();
+	  }
+	  Encoder=TIM1->CNT;
+
+
+
 	  HAL_ADC_Start_IT(&hadc1);
-	  //HAL_ADC_ADCStart(&hadc1);
-	 // HAL_ADC_PollForConversion(&hadc1, 10);
-	 // ValueFrmSoil=HAL_ADC_GetValue(&hadc1);
-	  //HAL_ADC_Stop(&hadc1);
-	 if(ValueFrmSoil >= 2000 && ValueFrmSoil <= 2730){
-		  Relay_SetState(GPIO_PIN_RESET);
-	  }else if(ValueFrmSoil >= 500 && ValueFrmSoil <= 1148)Relay_SetState(GPIO_PIN_SET);
-	  HAL_Delay(1000);
+	  HAL_ADC_Start_IT(&hadc2);
+
+//alocasia
+	 if(ValueFrmSoil1 <= 1500){
+		  Relay_SetState(GPIO_PIN_SET);
+		  ValveALOCASIA_SetState(GPIO_PIN_RESET);
+
+      	  }else if(ValueFrmSoil1 >= 1700 && ValueFrmSoil1 <=2800){
+      		Relay_SetState(GPIO_PIN_RESET);
+      		ValveALOCASIA_SetState(GPIO_PIN_SET);
+
+      	  }
+
+//FICUS
+	 if(ValueFrmSoil2 <= 1900){
+	 		  Relay_SetState(GPIO_PIN_SET);
+	 		  ValveFICUS_SetState(GPIO_PIN_RESET);
+
+	       	  }else if(ValueFrmSoil2 >= 2200 && ValueFrmSoil2 <=2800){
+	       		Relay_SetState(GPIO_PIN_RESET);
+	       		ValveFICUS_SetState(GPIO_PIN_SET);
+
+	       	  }
+
+
+	       	if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)==1){
+	       		  		 Display_Start_Interface2();
+	       		  	 }else Display_Start_Interface();
+
+
+
+	// HAL_UART_Transmit(&huart2, (uint8_t*)strData, sizeof((uint8_t*)strData), HAL_MAX_DELAY);//общения между есп и стм
+
+
 
 
 
@@ -217,6 +291,170 @@ static void MX_ADC1_Init(void)
 }
 
 /**
+  * @brief ADC2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC2_Init(void)
+{
+
+  /* USER CODE BEGIN ADC2_Init 0 */
+
+  /* USER CODE END ADC2_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC2_Init 1 */
+
+  /* USER CODE END ADC2_Init 1 */
+
+  /** Common config
+  */
+  hadc2.Instance = ADC2;
+  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc2.Init.ContinuousConvMode = DISABLE;
+  hadc2.Init.DiscontinuousConvMode = DISABLE;
+  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc2.Init.NbrOfConversion = 1;
+  if (HAL_ADC_Init(&hadc2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC2_Init 2 */
+
+  /* USER CODE END ADC2_Init 2 */
+
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief TIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM1_Init(void)
+{
+
+  /* USER CODE BEGIN TIM1_Init 0 */
+
+  /* USER CODE END TIM1_Init 0 */
+
+  TIM_Encoder_InitTypeDef sConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM1_Init 1 */
+
+  /* USER CODE END TIM1_Init 1 */
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 0;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 30;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
+  sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
+  sConfig.IC1Filter = 0;
+  sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
+  sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
+  sConfig.IC2Filter = 0;
+  if (HAL_TIM_Encoder_Init(&htim1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM1_Init 2 */
+
+  /* USER CODE END TIM1_Init 2 */
+
+}
+
+/**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -235,10 +473,26 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PB15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /*Configure GPIO pin : PB3 */
   GPIO_InitStruct.Pin = GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB8 PB9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -249,11 +503,40 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void  HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef*hadc){
 	if(hadc->Instance==ADC1){
-		ValueFrmSoil=HAL_ADC_GetValue(&hadc1);
-		HAL_ADC_Stop_IT(&hadc1);
-	}
+		ValueFrmSoil1=HAL_ADC_GetValue(&hadc1);
 
+	}
+	if(hadc->Instance==ADC2){
+					ValueFrmSoil2=HAL_ADC_GetValue(&hadc2);
+
+				}
 }
+
+
+
+void Display_Start_Interface(){
+sprintf(strData, "%d", ValueFrmSoil1);
+ssd1306_Fill(Black);
+ssd1306_SetCursor(5, 5);
+ssd1306_WriteString(Auto, Font_6x8, White);
+ssd1306_SetCursor(72, 0);
+ssd1306_WriteString(ALOCASIA, Font_7x10, White);
+ssd1306_SetCursor(40, 25);
+ssd1306_WriteString(strData, Font_11x18, White);
+ssd1306_UpdateScreen();
+}
+void Display_Start_Interface2(){
+sprintf(strData2, "%d", ValueFrmSoil2);
+ssd1306_Fill(Black);
+ssd1306_SetCursor(5, 5);
+ssd1306_WriteString(Auto, Font_6x8, White);
+ssd1306_SetCursor(90, 0);
+ssd1306_WriteString(FICUS, Font_7x10, White);
+ssd1306_SetCursor(40, 25);
+ssd1306_WriteString(strData2, Font_11x18, White);
+ssd1306_UpdateScreen();
+}
+
 /* USER CODE END 4 */
 
 /**
