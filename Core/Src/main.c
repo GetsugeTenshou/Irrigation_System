@@ -23,10 +23,10 @@
 /* USER CODE BEGIN Includes */
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
-<<<<<<< HEAD
+
 #include "stdio.h"
-=======
->>>>>>> acf9dd4e5dff3a83e9ad51f1c37d10092d2f4820
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,7 +57,6 @@ TIM_HandleTypeDef htim1;
 
 UART_HandleTypeDef huart2;
 
-<<<<<<< HEAD
 /* USER CODE BEGIN PV */
 uint32_t previousTick = 0;
   uint16_t ValueFrmSoil1=0;
@@ -68,16 +67,14 @@ uint32_t previousTick = 0;
   char Auto[]= "Auto";
   char FICUS[]= "FICUS";
   char ALOCASIA[]= "ALOCASIA";
-=======
 I2C_HandleTypeDef hi2c1;
-
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
   uint16_t ValueFrmSoil=0;
   char strData[10];
   char moisture[]= "Moisture:";
->>>>>>> acf9dd4e5dff3a83e9ad51f1c37d10092d2f4820
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -86,17 +83,14 @@ static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
-<<<<<<< HEAD
 static void MX_ADC2_Init(void);
 static void MX_TIM1_Init(void);
-=======
->>>>>>> acf9dd4e5dff3a83e9ad51f1c37d10092d2f4820
 /* USER CODE BEGIN PFP */
 // Функция для управления реле
 	void Relay_SetState(GPIO_PinState state) {
 	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, state);
 	}
-<<<<<<< HEAD
+
 	void ValveALOCASIA_SetState(GPIO_PinState state) {
 		 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, state);
 		}
@@ -106,8 +100,7 @@ static void MX_TIM1_Init(void);
 	void Display_Start_Interface(void);
 	void Display_Start_Interface2(void);
 
-=======
->>>>>>> acf9dd4e5dff3a83e9ad51f1c37d10092d2f4820
+
 
 
 /* USER CODE END PFP */
@@ -148,7 +141,6 @@ int main(void)
   MX_ADC1_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
-<<<<<<< HEAD
   MX_ADC2_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
@@ -158,11 +150,11 @@ int main(void)
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   HAL_ADC_Start_IT(&hadc1);
   HAL_ADC_Start_IT(&hadc2);
-=======
+
   /* USER CODE BEGIN 2 */
   HAL_ADCEx_Calibration_Start(&hadc1);
   ssd1306_Init();
->>>>>>> acf9dd4e5dff3a83e9ad51f1c37d10092d2f4820
+
 
 
   /* USER CODE END 2 */
@@ -176,7 +168,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-<<<<<<< HEAD
+
 	  if (HAL_GetTick() - previousTick >= 10000) {
 	          previousTick = HAL_GetTick();
 	  }
@@ -213,32 +205,19 @@ int main(void)
 	       	if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)==1){
 	       		  		 Display_Start_Interface2();
 	       		  	 }else Display_Start_Interface();
+	        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
+	       HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
+	       HAL_Delay(1000);
+	       HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
 
 
 
 	// HAL_UART_Transmit(&huart2, (uint8_t*)strData, sizeof((uint8_t*)strData), HAL_MAX_DELAY);//общения между есп и стм
 
 
-=======
-	  HAL_ADC_Start_IT(&hadc1);
-	  //HAL_ADC_ADCStart(&hadc1);
-	 // HAL_ADC_PollForConversion(&hadc1, 10);
-	 // ValueFrmSoil=HAL_ADC_GetValue(&hadc1);
-	  //HAL_ADC_Stop(&hadc1);
-	 if(ValueFrmSoil >= 1750){
-		  Relay_SetState(GPIO_PIN_RESET);
 
-      	  }else if(ValueFrmSoil >= 1000 && ValueFrmSoil <=1300)Relay_SetState(GPIO_PIN_SET);
-	 ssd1306_SetCursor(5, 5);//ToDo Запхати все у функцыю ы додати ще щось
-	 ssd1306_WriteString(moisture, Font_11x18, White);
-	 ssd1306_SetCursor(40, 25);
-	ssd1306_WriteString(strData, Font_11x18, White);
-	 ssd1306_UpdateScreen();
 
-	 sprintf(strData, "%d", ValueFrmSoil);
-	 HAL_UART_Transmit(&huart2, (uint8_t*)strData, sizeof((uint8_t*)strData), HAL_MAX_DELAY);
-	  HAL_Delay(1000);
->>>>>>> acf9dd4e5dff3a83e9ad51f1c37d10092d2f4820
+
 
 
 
@@ -338,7 +317,6 @@ static void MX_ADC1_Init(void)
 }
 
 /**
-<<<<<<< HEAD
   * @brief ADC2 Initialization Function
   * @param None
   * @retval None
@@ -386,8 +364,6 @@ static void MX_ADC2_Init(void)
 }
 
 /**
-=======
->>>>>>> acf9dd4e5dff3a83e9ad51f1c37d10092d2f4820
   * @brief I2C1 Initialization Function
   * @param None
   * @retval None
@@ -422,7 +398,6 @@ static void MX_I2C1_Init(void)
 }
 
 /**
-<<<<<<< HEAD
   * @brief TIM1 Initialization Function
   * @param None
   * @retval None
@@ -443,7 +418,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 30;
+  htim1.Init.Period = 65535;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -473,8 +448,6 @@ static void MX_TIM1_Init(void)
 }
 
 /**
-=======
->>>>>>> acf9dd4e5dff3a83e9ad51f1c37d10092d2f4820
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -527,13 +500,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : PB15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_15;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PB3 */
   GPIO_InitStruct.Pin = GPIO_PIN_3;
@@ -542,8 +509,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB8 PB9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+  /*Configure GPIO pins : PB4 PB5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
