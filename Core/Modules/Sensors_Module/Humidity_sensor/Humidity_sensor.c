@@ -2,6 +2,7 @@
 #include "Watering.h"
 #include <string.h>
 
+
 #define HUMIDITY_PRIORITY 3
 #define HUMIDITY_STACK_SIZE 1024
 #define QUEUE_LENGTH 10
@@ -20,9 +21,9 @@ typedef struct {
   StaticQueue_t xQueue_Humidity_Buffer;
   uint8_t ucQueueStorageArea[QUEUE_LENGTH * ITEM_SIZE];
 
-} humididty_ctx;
+} humididty_ctx_t;
 
-humididty_ctx ctx;
+humididty_ctx_t humididty_ctx;
 circular_buf_t buffer;
 uint32_t adc_buffer[MAX_SENSORS];
 sensor_cxt_t sensors_ctx = {.count = MAX_SENSORS};
@@ -41,15 +42,16 @@ void ADC_Calibrate(ADC_HandleTypeDef *hadc) {
 
 void Humidity_sensors_init(void) {
 
-  ctx.xHundle_Humidity = xTaskCreateStatic(
+  humididty_ctx.xHundle_Humidity = xTaskCreateStatic(
       humidity_loop, "HUMIDITY", HUMIDITY_STACK_SIZE, NULL, HUMIDITY_PRIORITY,
-      ctx.Humidity_Stack, &ctx.xTask_Humidity_Buffer);
-  ctx.xQueue_Humidity =
-      xQueueCreateStatic(QUEUE_LENGTH, ITEM_SIZE, ctx.ucQueueStorageArea,
-                         &ctx.xQueue_Humidity_Buffer);
+      humididty_ctx.Humidity_Stack, &humididty_ctx.xTask_Humidity_Buffer);
+  humididty_ctx.xQueue_Humidity =
+      xQueueCreateStatic(QUEUE_LENGTH, ITEM_SIZE, humididty_ctx.ucQueueStorageArea,
+                         &humididty_ctx.xQueue_Humidity_Buffer);
   ADC_Calibrate(&hadc1);
 
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, MAX_SENSORS);
+  
 }
 
 /**
@@ -94,15 +96,15 @@ void humidity_loop(void *pvParameters) {
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc1) {
-  if (ctx.xHundle_Humidity == NULL) {
+  if (humididty_ctx.xHundle_Humidity == NULL) {
     return;
   }
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  vTaskNotifyGiveFromISR(ctx.xHundle_Humidity, &xHigherPriorityTaskWoken);
+  vTaskNotifyGiveFromISR(humididty_ctx.xHundle_Humidity, &xHigherPriorityTaskWoken);
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 void HAL_ADC_ErrorCallback(ADC_HandleTypeDef *hadc1) {
-  HAL_ADC_Stop_DMA(&hadc1);
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buffer, MAX_SENSORS);
+  HAL_ADC_Stop_DMA(hadc1);
+  HAL_ADC_Start_DMA(hadc1, (uint32_t *)adc_buffer, MAX_SENSORS);
 }
