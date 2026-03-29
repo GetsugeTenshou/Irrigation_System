@@ -61,7 +61,19 @@ Sensor_cmd_status Light_Sensor_ON(void) {
 }
 
 Sensor_cmd_status Light_Sensor_OFF(void) { 
-    Light_Sensor_Send(POWER_DOWN_CMD); 
+    if (HAL_I2C_IsDeviceReady(&hi2c1, SENSOR_ADDR, I2C_TRIES, I2C_TIMEOUT)) {
+    return SENSOR_NOT_FOUND;
+  }
+
+  if (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY) {
+    return SENSOR_BUS_BUSY;
+  }
+
+  if (I2C_Send_CMD(POWER_DOWN_CMD) != HAL_OK) {
+    return SENSOR_SEND_COMMAND_FAIL;
+  }
+
+  return SENSOR_SEND_COMMAND_OK;
 }
 
 Sensor_cmd_status Light_Sensor_One_L_Measurement(void) {
