@@ -12,7 +12,8 @@
                 "${workspaceFolder}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3",
                 "${workspaceFolder}/Middlewares/Third_Party/FreeRTOS/Source/include",
                 "${workspaceFolder}/Core/Modules/Watering_Module",
-                "${workspaceFolder}/Core/Modules/Sensors_Module/Humidity_sensor"
+                "${workspaceFolder}/Core/Modules/Sensors_Module/Humidity_sensor",
+                "${workspaceFolder}/Core/Modules/Sensors_Module/Light_sensor"
             ],
             "defines": [
                 "STM32F103xB",

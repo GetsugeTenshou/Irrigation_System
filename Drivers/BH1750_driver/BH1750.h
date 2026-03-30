@@ -9,6 +9,10 @@
 
 #define SENSOR_ADDR 0x23
 
+typedef struct {
+  I2C_HandleTypeDef *hi2c;
+} BH1750_t;
+
 typedef enum {
   CONTINUOUSLY_H_RES_MODE2_CMD = 0x11,
   CONTINUOUSLY_H_RES_MODE_CMD = 0x10,
@@ -31,6 +35,15 @@ typedef enum {
 } Sensor_cmd_status;
 
 /**
+ * @brief
+ *
+ * @param hi2c
+ * @param addr
+ * @return Sensor_cmd_status
+ */
+Sensor_cmd_status BH1750_Init(I2C_HandleTypeDef *hi2c);
+
+/**
  * @brief Function for ON sensor
  *
  * @return Sensor_cmd_status
@@ -47,8 +60,11 @@ Sensor_cmd_status Light_Sensor_OFF(void);
 /**
  * @brief Function that reset data register value. Reset command is not
  * acceptable in Power Down mode
- *
- * @return Sensor_cmd_status
+ * 
+ * Resets the sensor's internal data register (Synchronous).
+ * 1. Sends the RESET_CMD to the driver task via task notification.
+ * 2. Blocks the calling task until the driver confirms execution via semaphore.
+ * 3. Note: Reset command is only valid when the sensor is in Power ON state.
  */
 Sensor_cmd_status Light_Sensor_Reset_Reg(void);
 
@@ -57,7 +73,10 @@ Sensor_cmd_status Light_Sensor_Reset_Reg(void);
  * Measurement Time is typically 120ms.
  * It is automatically set to Power Down mode after measurement
  *
- * @return Sensor_cmd_status
+ * Triggers One-Time High Resolution measurement (Synchronous).
+ * 1. Sends H-Resolution command to the driver task.
+ * 2. Blocks the caller until the driver signals completion.
+ * 3. Returns the actual hardware status or a timeout error.
  */
 Sensor_cmd_status Light_Sensor_One_H_Measurement(void);
 
@@ -65,17 +84,23 @@ Sensor_cmd_status Light_Sensor_One_H_Measurement(void);
  * @brief Function for make measurement at 0.5lx resolution.
  * Measurement Time is typically 120ms.
  * It is automatically set to Power Down mode after measurement
- *
- * @return Sensor_cmd_status
+ * 
+ * Triggers Continuous High Resolution Mode 2 measurement (Synchronous).
+ * 1. Sends continuous H-Res Mode 2 command (0.5 lux precision).
+ * 2. Blocks calling task until the driver signals completion.
+ * 3. Returns the resulting status or a timeout error.
  */
 Sensor_cmd_status Light_Sensor_One_H2_Measurement(void);
 
 /**
  * @brief Function for make measurement at 4lx resolution.
- * Measurement Time is typically 16ms. 
+ * Measurement Time is typically 16ms.
  * It is automatically set to Power Down mode after measurement
  *
- * @return Sensor_cmd_status
+ * Triggers One-Time Low Resolution measurement .
+ * 1. Notifies driver task with the specific command.
+ * 2. Blocks calling task until the driver signals completion via semaphore.
+ * 3. Returns driver execution status or timeout error.
  */
 Sensor_cmd_status Light_Sensor_One_L_Measurement(void);
 
@@ -83,28 +108,38 @@ Sensor_cmd_status Light_Sensor_One_L_Measurement(void);
  * @brief Function for make measurement at 1lx resolution.
  * Measurement Time is typically 120ms
  *
- * @return Sensor_cmd_status
+ * Triggers Continuous High Resolution measurement (Synchronous).
+ * 1. Sends continuous H-Res mode command to the driver task.
+ * 2. Blocks calling task until the driver signals completion.
+ * 3. Returns the resulting status or a timeout error.
  */
+
 Sensor_cmd_status Light_Sensor_Contin_H_Measurement(void);
 
 /**
  * @brief Function for make measurement at 0.5lx resolution.
- * Measurement Time is typically 120ms. 
+ * Measurement Time is typically 120ms.
  *
- * @return Sensor_cmd_status
+ * Triggers One-Time High Resolution Mode 2 measurement (Synchronous).
+ * 1. Notifies driver task to start H-Res Mode 2 (0.5 lux precision).
+ * 2. Blocks the caller until the driver signals completion via semaphore.
+ * 3. Returns the resulting status from the driver or a timeout error.
  */
 Sensor_cmd_status Light_Sensor_Contin_H2_Measurement(void);
 
 /**
  * @brief Function for make measurement at 4lx resolution.
- * Measurement Time is typically 16ms. 
+ * Measurement Time is typically 16ms.
  *
- * @return Sensor_cmd_status
+ * Triggers Continuous Low Resolution measurement (Synchronous).
+ * 1. Sends continuous L-Res mode command to the driver task.
+ * 2. Blocks calling task until the driver signals completion.
+ * 3. Returns the resulting status or a timeout error.
  */
 Sensor_cmd_status Light_Sensor_Contin_L_Measurement(void);
 
 /**
- * @brief Function for change  measurement time. 
+ * @brief Function for change  measurement time.
  *
  * @return Sensor_cmd_status
  */
