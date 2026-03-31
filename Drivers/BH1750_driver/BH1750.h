@@ -31,15 +31,15 @@ typedef enum {
   SENSOR_NOT_FOUND,
   SENSOR_BUS_BUSY,
   SENSOR_ERROR_TIMEOUT,
-  SENSOR_ERROR_ADDR_NACK
+  SENSOR_ERROR_ADDR_NACK,
+  SENSOR_INIT_ERROR,
+  SENSOR_INIT_OK
 } Sensor_cmd_status;
 
 /**
- * @brief
- *
- * @param hi2c
- * @param addr
- * @return Sensor_cmd_status
+ * @brief Initializes the BH1750 driver structure.
+ * @param hi2c Pointer to the I2C hardware handle.
+ * @return Sensor_cmd_status Returns OK if initialization succeeds.
  */
 Sensor_cmd_status BH1750_Init(I2C_HandleTypeDef *hi2c);
 
@@ -60,7 +60,7 @@ Sensor_cmd_status Light_Sensor_OFF(void);
 /**
  * @brief Function that reset data register value. Reset command is not
  * acceptable in Power Down mode
- * 
+ *
  * Resets the sensor's internal data register (Synchronous).
  * 1. Sends the RESET_CMD to the driver task via task notification.
  * 2. Blocks the calling task until the driver confirms execution via semaphore.
@@ -84,7 +84,7 @@ Sensor_cmd_status Light_Sensor_One_H_Measurement(void);
  * @brief Function for make measurement at 0.5lx resolution.
  * Measurement Time is typically 120ms.
  * It is automatically set to Power Down mode after measurement
- * 
+ *
  * Triggers Continuous High Resolution Mode 2 measurement (Synchronous).
  * 1. Sends continuous H-Res Mode 2 command (0.5 lux precision).
  * 2. Blocks calling task until the driver signals completion.

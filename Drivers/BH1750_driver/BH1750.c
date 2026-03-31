@@ -41,9 +41,9 @@ void BH1750_loop(void *pvParameters);
 Sensor_cmd_status BH1750_Init(I2C_HandleTypeDef *hi2c) {
   if (hi2c != NULL) {
     bh_init.hi2c = hi2c;
-    return SENSOR_INIT_OK; 
+    return SENSOR_INIT_OK;
   } else {
-    return SENSOR_INIT_ERROR; 
+    return SENSOR_INIT_ERROR;
   }
 }
 
