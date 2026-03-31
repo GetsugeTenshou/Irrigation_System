@@ -24,13 +24,14 @@ Sensor_cmd_status status_cmd;
 typedef struct {
 
   TaskHandle_t xHundle_BH1750;
-  SemaphoreHandle_t xSem_I2C_Done;
   StaticTask_t XTask_BH1750_Buffer;
   StackType_t BH1750_Stack[BH1750_STACK_SIZE];
 
   QueueHandle_t xQueue_BH1750;
   StaticQueue_t xQueue_BH1750_Buffer;
   uint8_t ucQueueStorageArea[QUEUE_LENGTH * ITEM_SIZE];
+
+  SemaphoreHandle_t xSem_I2C_Done;
 
 } light_ctx_t;
 
@@ -39,6 +40,12 @@ light_ctx_t BH1750_ctx;
 void BH1750_loop(void *pvParameters);
 
 Sensor_cmd_status BH1750_Init(I2C_HandleTypeDef *hi2c) {
+
+  BH1750_ctx.xHundle_BH1750 = xTaskCreateStatic(
+      BH1750_loop, "BH1750", BH1750_STACK_SIZE, NULL, BH1750_PRIORITY,
+      BH1750_ctx.BH1750_Stack, &BH1750_ctx.XTask_BH1750_Buffer);
+
+   BH1750_ctx.xQueue_BH1750=xQueueCreateStatic(QUEUE_LENGTH,ITEM_SIZE,BH1750_ctx.ucQueueStorageArea,&BH1750_ctx.xQueue_BH1750_Buffer);   
   if (hi2c != NULL) {
     bh_init.hi2c = hi2c;
     return SENSOR_INIT_OK;
