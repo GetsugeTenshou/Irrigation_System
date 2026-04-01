@@ -1,0 +1,14 @@
+*.s
+*.o
+*.d
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+
+# CubeIDE
+Debug/
+Release/
+build/
+build/
