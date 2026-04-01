@@ -43,10 +43,9 @@ Light_Sensor_Status light_init(void) {
 void light_loop(void *pvParameters) {
 
   for(;;){
+
+  
      ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-     
-
 
   }
 }
