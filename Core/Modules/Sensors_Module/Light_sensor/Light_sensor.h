@@ -10,7 +10,14 @@
 
 typedef enum {
     LIGHT_SENSOR_INIT_OK,
-    LIGHT_SENSOR_INIT_FAIL
+    LIGHT_SENSOR_INIT_FAIL,
 }Light_Sensor_Status;
+
+/**
+ * @brief 
+ * 
+ * @return Light_Sensor_Status 
+ */
+Light_Sensor_Status light_init(void);
 
 #endif /**LIGHT_SENSOR_H_ */

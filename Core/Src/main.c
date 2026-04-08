@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "Watering.h"
 #include "Humidity_sensor.h"
+#include "Light_sensor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -109,6 +110,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 //Watering_Init();
 Humidity_sensors_init();
+light_init();
 vTaskStartScheduler();
   /* USER CODE END 2 */
 
