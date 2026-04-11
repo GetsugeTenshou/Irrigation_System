@@ -7,7 +7,7 @@
 #include "task.h"
 #include <stdbool.h>
 
-#define SENSOR_ADDR 0x23
+#define SENSOR_ADDR 0x46
 
 typedef struct {
   I2C_HandleTypeDef *hi2c;
