@@ -32,20 +32,24 @@ typedef struct {
   uint8_t ucQueueStorageArea[QUEUE_LENGTH * ITEM_SIZE];
 
   SemaphoreHandle_t xSem_I2C_Done;
+  StaticSemaphore_t xSem_I2C_Done_Buffer;
 
-} light_ctx_t;
+} BH1750_ctx_t;
 
-light_ctx_t BH1750_ctx;
+BH1750_ctx_t BH1750_ctx;
 
 void BH1750_loop(void *pvParameters);
 
 Sensor_cmd_status BH1750_Init(I2C_HandleTypeDef *hi2c) {
-
+  BH1750_ctx.xSem_I2C_Done =
+      xSemaphoreCreateBinaryStatic(&BH1750_ctx.xSem_I2C_Done_Buffer);
   BH1750_ctx.xHundle_BH1750 = xTaskCreateStatic(
       BH1750_loop, "BH1750", BH1750_STACK_SIZE, NULL, BH1750_PRIORITY,
       BH1750_ctx.BH1750_Stack, &BH1750_ctx.XTask_BH1750_Buffer);
 
-   BH1750_ctx.xQueue_BH1750=xQueueCreateStatic(QUEUE_LENGTH,ITEM_SIZE,BH1750_ctx.ucQueueStorageArea,&BH1750_ctx.xQueue_BH1750_Buffer);   
+  BH1750_ctx.xQueue_BH1750 =
+      xQueueCreateStatic(QUEUE_LENGTH, ITEM_SIZE, BH1750_ctx.ucQueueStorageArea,
+                         &BH1750_ctx.xQueue_BH1750_Buffer);
   if (hi2c != NULL) {
     bh_init.hi2c = hi2c;
     return SENSOR_INIT_OK;
@@ -56,7 +60,7 @@ Sensor_cmd_status BH1750_Init(I2C_HandleTypeDef *hi2c) {
 
 static HAL_StatusTypeDef I2C_Send_CMD(Sensor_CMD_t cmd) {
 
-  HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&bh_init.hi2c, SENSOR_ADDR,
+  HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(bh_init.hi2c, SENSOR_ADDR,
                                                      &cmd, sizeof(uint8_t), 1);
   return status;
 }
@@ -83,7 +87,7 @@ static Sensor_cmd_status Light_Sensor_Send(Sensor_CMD_t cmd) {
       if (HAL_I2C_IsDeviceReady(bh_init.hi2c, SENSOR_ADDR, I2C_TRIES,
                                 I2C_TIMEOUT) == HAL_OK) {
 
-        if (I2C_Send_CMD(&cmd) != HAL_OK) {
+        if (I2C_Send_CMD(cmd) != HAL_OK) {
           return SENSOR_SEND_COMMAND_FAIL;
         }
 
@@ -158,7 +162,7 @@ Sensor_cmd_status Light_Sensor_One_H_Measurement(void) {
   }
 }
 
-Sensor_cmd_status Light_Sensor_Contin_H2_Measurement(void) {
+Sensor_cmd_status Light_Sensor_One_H2_Measurement(void) {
   if (xTaskNotify(BH1750_ctx.xHundle_BH1750, ONE_TIME_H_RES_MODE2_CMD,
                   eSetValueWithOverwrite) != pdPASS) {
     return SENSOR_SEND_COMMAND_FAIL;
