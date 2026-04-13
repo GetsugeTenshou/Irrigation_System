@@ -12,6 +12,7 @@
 #define MAX_HOURS 23
 #define ONE_HOUR 1
 #define MEASUREMENT_INTERVAL_MS 120
+#define DAILY_LIGHT_THRESHOLD_FICUS 300000
 
 extern I2C_HandleTypeDef hi2c1;
 extern RTC_HandleTypeDef hrtc;
@@ -20,7 +21,7 @@ typedef struct {
 
   RTC_AlarmTypeDef TimeToLight;
   RTC_TimeTypeDef Time;
-  uint16_t data;
+  uint32_t data;
 
 } rtc_ctx_t;
 
@@ -102,7 +103,7 @@ void light_loop(void *pvParameters) {
     }
 #endif
 
-#ifdef MEASUREMENT_MODE_ONE_120MS
+//#ifdef MEASUREMENT_MODE_ONE_120MS
     if (Light_Sensor_One_H_Measurement() == SENSOR_SEND_COMMAND_OK) {
       vTaskDelay(MEASUREMENT_INTERVAL_MS);
       if (HAL_I2C_Master_Receive(&hi2c1, SENSOR_ADDR, (uint8_t *)&rtc_ctx.data,
@@ -120,7 +121,7 @@ void light_loop(void *pvParameters) {
         }
       }
     }
-#endif
+//#endif
 
     HAL_RTC_GetTime(&hrtc, &rtc_ctx.Time, RTC_FORMAT_BIN);
     rtc_ctx.TimeToLight.AlarmTime.Minutes = rtc_ctx.Time.Minutes + ONE_MINUTE;
