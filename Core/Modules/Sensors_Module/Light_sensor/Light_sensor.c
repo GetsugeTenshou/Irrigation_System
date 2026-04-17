@@ -1,5 +1,6 @@
 #include "Light_sensor.h"
 #include "BH1750.h"
+#include "Fito_lamp.h"
 #include "Watering.h"
 #include <string.h>
 
@@ -21,7 +22,7 @@ typedef struct {
 
   RTC_AlarmTypeDef TimeToLight;
   RTC_TimeTypeDef Time;
-  uint32_t data;
+  uint16_t data;
 
 } rtc_ctx_t;
 
@@ -47,7 +48,7 @@ static HAL_StatusTypeDef Rtc_Init(void) {
   if (HAL_RTC_GetTime(&hrtc, &rtc_ctx.Time, RTC_FORMAT_BIN) != HAL_OK) {
     return HAL_ERROR;
   }
-/**Immediately add a specific time for the alarm clock */
+  /**Immediately add a specific time for the alarm clock */
   rtc_ctx.TimeToLight.AlarmTime.Hours = rtc_ctx.Time.Hours;
   rtc_ctx.TimeToLight.AlarmTime.Minutes = rtc_ctx.Time.Minutes + ONE_MINUTE;
   rtc_ctx.TimeToLight.AlarmTime.Seconds = rtc_ctx.Time.Seconds;
@@ -103,7 +104,7 @@ void light_loop(void *pvParameters) {
     }
 #endif
 
-//#ifdef MEASUREMENT_MODE_ONE_120MS
+    // #ifdef MEASUREMENT_MODE_ONE_120MS
     if (Light_Sensor_One_H_Measurement() == SENSOR_SEND_COMMAND_OK) {
       vTaskDelay(MEASUREMENT_INTERVAL_MS);
       if (HAL_I2C_Master_Receive(&hi2c1, SENSOR_ADDR, (uint8_t *)&rtc_ctx.data,
@@ -121,13 +122,15 @@ void light_loop(void *pvParameters) {
         }
       }
     }
-//#endif
+    // #endif
 
-    HAL_RTC_GetTime(&hrtc, &rtc_ctx.Time, RTC_FORMAT_BIN);
-    rtc_ctx.TimeToLight.AlarmTime.Minutes = rtc_ctx.Time.Minutes + ONE_MINUTE;
-    HAL_RTC_SetAlarm_IT(&hrtc, &rtc_ctx.TimeToLight, RTC_FORMAT_BIN);
-    /**Here if we cross the 60 minute mark then we reset the minutes. Crossing
-     * the hour mark, namely 24 hours then we also reset the hours */
+    // if ( rtc_ctx.data == NULL || FitoLamp_GetQueue() == NULL) {
+    //   if (xQueueSend(fito_lamp_GetQueue(), &rtc_ctx.data, 0) != pdTRUE) {
+    //     /**TODO write that we do if queue is NULL and avrg is NULL */
+    //   }
+    //   /**TODO: Write processing that we get pdFALSE */
+    // }
+
     if (rtc_ctx.Time.Minutes > MAX_MINUTES) {
       rtc_ctx.TimeToLight.AlarmTime.Minutes = 0;
       rtc_ctx.TimeToLight.AlarmTime.Hours = rtc_ctx.Time.Hours + ONE_HOUR;
@@ -135,6 +138,11 @@ void light_loop(void *pvParameters) {
         rtc_ctx.TimeToLight.AlarmTime.Hours = 0;
       }
     }
+    HAL_RTC_GetTime(&hrtc, &rtc_ctx.Time, RTC_FORMAT_BIN);
+    rtc_ctx.TimeToLight.AlarmTime.Minutes = rtc_ctx.Time.Minutes + ONE_MINUTE;
+    HAL_RTC_SetAlarm_IT(&hrtc, &rtc_ctx.TimeToLight, RTC_FORMAT_BIN);
+    /**Here if we cross the 60 minute mark then we reset the minutes. Crossing
+     * the hour mark, namely 24 hours then we also reset the hours */
   }
 }
 

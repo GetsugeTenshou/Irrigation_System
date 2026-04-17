@@ -14,7 +14,8 @@
                 "${workspaceFolder}/Core/Modules/Watering_Module",
                 "${workspaceFolder}/Core/Modules/Sensors_Module/Humidity_sensor",
                 "${workspaceFolder}/Core/Modules/Sensors_Module/Light_sensor",
-                "${workspaceFolder}/Drivers/BH1750_driver"
+                "${workspaceFolder}/Drivers/BH1750_driver",
+                "${workspaceFolder}/Core/Modules/Fito_Lamp_Module"
             ],
             "defines": [
                 "STM32F103xB",
